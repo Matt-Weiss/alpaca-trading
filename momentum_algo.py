@@ -215,12 +215,21 @@ def run(tickers, market_open_dt, market_close_dt):
                 return
 
             # See how high the price went during the first 15 minutes
+            print('symbol: ', symbol)
             lbound = market_open_dt
+            print('lbound: ', lbound)
             ubound = lbound + timedelta(minutes=15)
+            print('ubound: ', ubound)
             high_15m = 0
             try:
+                print('Within try ln 225:')
                 high_15m = minute_history[symbol][lbound:ubound]['high'].max()
+                print('minute_history[symbol]: ', minute_history[symbol])
+                print('minute_history[symbol][lbound:ubound]: ', minute_history[symbol][lbound:ubound])
+                print('minute_history[symbol][lbound:ubound][high]: ', minute_history[symbol][lbound:ubound]['high'])
+                print('minute_history[symbol][lbound:ubound][high].max(): ', minute_history[symbol][lbound:ubound]['high'].max())
             except Exception as e:
+                print('Exception in try ln 225')
                 # Because we're aggregating on the fly, sometimes the datetime
                 # index can get messy until it's healed by the minute bars
                 return
@@ -229,6 +238,8 @@ def run(tickers, market_open_dt, market_close_dt):
             daily_pct_change = (
                 (data.close - prev_closes[symbol]) / prev_closes[symbol]
             )
+            print('daily pct change: ', daily_pct_change)
+            print('high_15m: ', high_15m)
             if (
                 daily_pct_change > .04 and
                 data.close > high_15m and
@@ -272,14 +283,6 @@ def run(tickers, market_open_dt, market_close_dt):
                 print('Submitting buy for {} shares of {} at {} with target price of {} and stop-loss of {}'.format(
                     shares_to_buy, symbol, data.close, target_price, stop_price
                 ))
-                # try:
-                #     o = api.submit_order(
-                #         symbol=symbol, qty=str(shares_to_buy), side='buy',
-                #         type='limit', time_in_force='day',
-                #         limit_price=str(data.close)
-                #     )
-                #     open_orders[symbol] = o
-                #     latest_cost_basis[symbol] = data.close
                 try:
                     o = api.submit_order(
                         symbol=symbol,
@@ -297,45 +300,6 @@ def run(tickers, market_open_dt, market_close_dt):
                 except Exception as e:
                     print(e)
                 return
-        # if(
-        #     since_market_open.seconds // 60 >= 24 and
-        #     until_market_close.seconds // 60 > 15
-        # ):
-        #     # Check for liquidation signals
-
-        #     # We can't liquidate if there's no position
-        #     position = positions.get(symbol, 0)
-        #     if position == 0:
-        #         return
-
-        #     # Sell for a loss if it's fallen below our stop price
-        #     # Sell for a loss if it's below our cost basis and MACD < 0
-        #     # Sell for a profit if it's above our target price
-        #     hist = macd(
-        #         minute_history[symbol]['close'].dropna(),
-        #         n_fast=13,
-        #         n_slow=21
-        #     )
-        #     if (
-        #         data.close <= stop_prices[symbol] or
-        #         (data.close >= target_prices[symbol] and hist[-1] <= 0) or
-        #         (data.close <= latest_cost_basis[symbol] and hist[-1] <= 0)
-        #     ):
-        #         print('Submitting sell for {} shares of {} at {}'.format(
-        #             position, symbol, data.close
-        #         ))
-        #         try:
-        #             o = api.submit_order(
-        #                 symbol=symbol, qty=str(position), side='sell',
-        #                 type='limit', time_in_force='day',
-        #                 limit_price=str(data.close)
-        #             )
-        #             open_orders[symbol] = o
-        #             latest_cost_basis[symbol] = data.close
-        #         except Exception as e:
-        #             print(e)
-        #     return
-        # elif (
         if (
             until_market_close.seconds // 60 <= 15
         ):
@@ -416,7 +380,7 @@ if __name__ == "__main__":
             tzinfo=nyc
         ).to_pydatetime()
         return market_open, market_close
-        
+
     market_open, market_close = set_markets(0)
     if market_close < datetime.now(nyc):
         market_open, market_close = set_markets(1)
@@ -425,20 +389,20 @@ if __name__ == "__main__":
     print('market_close:', market_close)
 
     # Wait until just before we might want to trade
-    current_dt = datetime.today().astimezone(nyc)
-    since_market_open = int((current_dt - market_open).total_seconds())
-    while since_market_open < 0:
-        hours, remainder = divmod(abs(since_market_open), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        print(f'Market opens in {hours} hours, {minutes} minutes, and {seconds} seconds   \r', end='')
-        time.sleep(1)
-        current_dt = datetime.today().astimezone(nyc)
-        since_market_open = int((current_dt - market_open).total_seconds())
-    while since_market_open // 60 <= 4:
-        minutes, seconds = divmod(since_market_open, 60)
-        print(f'Market has been open {minutes} minutes and {seconds} seconds. Delaying trading until Market open 15 minutes    \r', end='')
-        time.sleep(1)
-        current_dt = datetime.today().astimezone(nyc)
-        since_market_open = int((current_dt - market_open).total_seconds())
+    # current_dt = datetime.today().astimezone(nyc)
+    # since_market_open = int((current_dt - market_open).total_seconds())
+    # while since_market_open < 0:
+    #     hours, remainder = divmod(abs(since_market_open), 3600)
+    #     minutes, seconds = divmod(remainder, 60)
+    #     print(f'Market opens in {hours} hours, {minutes} minutes, and {seconds} seconds   \r', end='')
+    #     time.sleep(1)
+    #     current_dt = datetime.today().astimezone(nyc)
+    #     since_market_open = int((current_dt - market_open).total_seconds())
+    # while since_market_open // 60 <= 4:
+    #     minutes, seconds = divmod(since_market_open, 60)
+    #     print(f'Market has been open {minutes} minutes and {seconds} seconds. Delaying trading until Market open 15 minutes    \r', end='')
+    #     time.sleep(1)
+    #     current_dt = datetime.today().astimezone(nyc)
+    #     since_market_open = int((current_dt - market_open).total_seconds())
 
     run(get_tickers(), market_open, market_close)
