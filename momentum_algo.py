@@ -389,20 +389,20 @@ if __name__ == "__main__":
     print('market_close:', market_close)
 
     # Wait until just before we might want to trade
-    # current_dt = datetime.today().astimezone(nyc)
-    # since_market_open = int((current_dt - market_open).total_seconds())
-    # while since_market_open < 0:
-    #     hours, remainder = divmod(abs(since_market_open), 3600)
-    #     minutes, seconds = divmod(remainder, 60)
-    #     print(f'Market opens in {hours} hours, {minutes} minutes, and {seconds} seconds   \r', end='')
-    #     time.sleep(1)
-    #     current_dt = datetime.today().astimezone(nyc)
-    #     since_market_open = int((current_dt - market_open).total_seconds())
-    # while since_market_open // 60 <= 4:
-    #     minutes, seconds = divmod(since_market_open, 60)
-    #     print(f'Market has been open {minutes} minutes and {seconds} seconds. Delaying trading until Market open 15 minutes    \r', end='')
-    #     time.sleep(1)
-    #     current_dt = datetime.today().astimezone(nyc)
-    #     since_market_open = int((current_dt - market_open).total_seconds())
+    current_dt = datetime.today().astimezone(nyc)
+    since_market_open = int((current_dt - market_open).total_seconds())
+    while since_market_open < 0:
+        hours, remainder = divmod(abs(since_market_open), 3600)
+        minutes, seconds = divmod(remainder, 60)
+        print(f'Market opens in {hours} hours, {minutes} minutes, and {seconds} seconds   \r', end='')
+        time.sleep(1)
+        current_dt = datetime.today().astimezone(nyc)
+        since_market_open = int((current_dt - market_open).total_seconds())
+    while since_market_open // 60 <= 4:
+        minutes, seconds = divmod(since_market_open, 60)
+        print(f'Market has been open {minutes} minutes and {seconds} seconds. Delaying trading until Market open 15 minutes    \r', end='')
+        time.sleep(1)
+        current_dt = datetime.today().astimezone(nyc)
+        since_market_open = int((current_dt - market_open).total_seconds())
 
     run(get_tickers(), market_open, market_close)
